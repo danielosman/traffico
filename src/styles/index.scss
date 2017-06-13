@@ -1,0 +1,33 @@
+
+svg {
+  .road {
+    fill: none;
+    stroke: #444444;
+    stroke-width: 2px;
+  }
+
+  .point {
+    fill: #ff2222;
+    opacity: 0.65
+  }
+  .point:hover {
+    fill: #ff2222;
+    opacity: 0.90;
+    cursor: pointer;
+  }
+
+  .nearest-point {
+    fill: none;
+    stroke: #2222ff;
+    stroke-width: 2px;
+  }
+
+  .handle {
+    fill: #22ff22;
+    opacity: 0.65
+  }
+  .handle:hover {
+    opacity: 0.90;
+    cursor: pointer;
+  }
+}
