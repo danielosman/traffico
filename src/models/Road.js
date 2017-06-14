@@ -9,6 +9,25 @@ export default class Road extends ModelBase {
   constructor (options = {}) {
     super(options)
     this.selected = false
+    const throttledDragRoadPointFunc = _.throttle((d, ev) => {
+      d.segment.point.x = ev.x
+      d.segment.point.y = ev.y
+      this.render()
+    }, 50).bind(this)
+    this.dragRoadPoint = d3Drag.drag().on('drag', d => {
+      const ev = { x: d3Selection.event.x, y: d3Selection.event.y }
+      throttledDragRoadPointFunc(d, ev)
+    })
+  }
+
+  get defaults () {
+    return {
+      type: 'Road'
+    }
+  }
+
+  get num () {
+    return this.get('num')
   }
 
   render () {
@@ -23,9 +42,9 @@ export default class Road extends ModelBase {
 
   _renderRoad (svg) {
     const roadData = this.id ? [this] : []
-    const roadsSvg = svg.selectAll('.road').data(roadData, d => d.id)
+    const roadsSvg = svg.selectAll(`.${this.id}`).data(roadData, d => d.id)
     const roadsSvgEnter = roadsSvg.enter().append('path')
-    roadsSvgEnter.attr('class', d => `road road-${d.id}`)
+    roadsSvgEnter.attr('class', d => `road ${d.id}`)
     roadsSvgEnter.attr('d', d => d.path.pathData)
     const roadsSvgEdit = roadsSvgEnter.merge(roadsSvg).transition().ease(d3Ease.easeLinear).duration(100)
     roadsSvgEdit.attr('d', d => d.path.pathData)
@@ -40,18 +59,13 @@ export default class Road extends ModelBase {
         roadPoints.push({ id: `point-${this.id}-${i}`, segment })
       })
     }
-    const drag = d3Drag.drag().on('drag', d => {
-      d.segment.point.x = d3Selection.event.x
-      d.segment.point.y = d3Selection.event.y
-      this.render()
-    })
     const pointsSvg = svg.selectAll('.point').data(roadPoints, d => d.id)
     const pointsSvgEnter = pointsSvg.enter().append('circle')
     pointsSvgEnter.attr('class', d => `point ${d.id}`)
     pointsSvgEnter.attr('cx', d => d.segment.point.x)
     pointsSvgEnter.attr('cy', d => d.segment.point.y)
     pointsSvgEnter.attr('r', 0)
-    pointsSvgEnter.call(drag)
+    pointsSvgEnter.call(this.dragRoadPoint)
     const pointsSvgEdit = pointsSvgEnter.merge(pointsSvg).transition().ease(d3Ease.easeLinear).duration(100)
     pointsSvgEdit.attr('cx', d => d.segment.point.x)
     pointsSvgEdit.attr('cy', d => d.segment.point.y)

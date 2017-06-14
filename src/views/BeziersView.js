@@ -1,5 +1,4 @@
 import * as d3Selection from 'd3-selection'
-import 'd3-transition'
 import * as d3Scale from 'd3-scale'
 import _ from 'lodash'
 import paper from 'paper/dist/paper-core'
@@ -14,10 +13,12 @@ import RoadMarker from '../models/RoadMarker'
 
 import buttonPanelHTML from '../html/buttonPanel.html'
 
+
 export default class BeziersView extends Backbone.View {
   constructor (...args) {
     super(...args)
     this.listenTo(this, 'render', this.renderObject)
+    this.listenTo(this, 'addObject', this.addObject)
   }
 
   get events () {
@@ -65,6 +66,8 @@ export default class BeziersView extends Backbone.View {
       this._actions.select = new SelectAction({ parent: this })
       this._actions.roadDivide = new RoadDivide({ parent: this, roadMarker })
       this._actions.roadAdd = new RoadAdd({ parent: this })
+      //
+      this.objects = []
     }
     this.svg
       .attr('width', this.width)
@@ -84,7 +87,8 @@ export default class BeziersView extends Backbone.View {
 
   _onRoadAdd () {
     this.trigger('cancelAllActions')
-    this.trigger('activate:RoadAdd')
+    const roads = _.filter(this.objects, obj => obj.get('type') === 'Road')
+    this.trigger('activate:RoadAdd', { roads })
   }
 
   _onRoadDivide () {
@@ -119,27 +123,18 @@ export default class BeziersView extends Backbone.View {
     this._yScale = d3Scale.scaleLinear().domain(viewport[1]).range([0, this.height])
   }
 
-  _prepareRoads () {
-    if (!this._roads) {
-      const path = new paper.Path()
-      path.add(new paper.Point(this._xScale(30), this._yScale(50)))
-      path.add(new paper.Point(this._xScale(60), this._yScale(150)))
-      path.add(new paper.Point(this._xScale(90), this._yScale(40)))
-      //path.smooth({ type: 'catmull-rom', factor: 1.0 })
-      path.smooth({ type: 'continuous' })
-      const road = { id: 1, path }
-      this._roads = [road]
-    }
-  }
-
   renderObject (obj) {
     obj._render(this.svg)
+  }
+
+  addObject (obj) {
+    this.objects.push(obj)
+    console.log('objects: ', this.objects)
   }
 
   render () {
     this._initSvg()
     this._initButtonPanel()
     this._prepareScales()
-    this._prepareRoads()
   }
 }
