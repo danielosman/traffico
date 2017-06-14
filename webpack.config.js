@@ -26,6 +26,12 @@ const plugins = []
 plugins.push(extractSass)
 plugins.push(htmlWebpack)
 
+const externals = {
+  'jquery': {amd: 'jquery', root: 'jQuery'},
+  'lodash': {amd: 'lodash', root: '_'},
+  'backbone': {amd: 'backbone', root: 'Backbone'},
+}
+
 const config = {
   entry: {
     'beziers': path.join(__dirname, '/src/index.js')
@@ -67,20 +73,25 @@ const config = {
       },
       {
         test: /\.html$/,
-        loader: 'handlebars-loader'
+        use: [{
+          loader: 'handlebars-loader'
+        }]
       },
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015']
-        }
+        use: [{
+          loader: 'babel-loader',
+          //options: {
+            query: {
+              presets: ['es2015']
+            }
+          //}
+        }],
       }
     ]
   },
-  externals: {
-  },
+  externals: {},
   resolve: {
     alias: {}
   },
