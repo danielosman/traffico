@@ -1,15 +1,18 @@
-import ModelBase from './ModelBase'
 import * as d3Ease from 'd3-ease'
 import 'd3-transition'
+import _ from 'lodash'
 
-export default class RoadMarker extends ModelBase {
+import ModelBase from './ModelBase'
+
+export default class Intersection extends ModelBase {
   constructor (options = {}) {
     super(options)
+    this._roads = []
   }
 
   get defaults () {
     return {
-      type: 'RoadMarker'
+      type: 'Intersection'
     }
   }
 
@@ -31,12 +34,12 @@ export default class RoadMarker extends ModelBase {
     return this._point
   }
 
-  setLocation (location) {
-    this._location = location
+  addRoad (road, origin) {
+    this._roads.push({ road, origin })
   }
 
-  getLocation () {
-    return this._location
+  getRoads () {
+    return _.map(this._roads, 'road')
   }
 
   _transform (matrix) {

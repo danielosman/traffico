@@ -5,12 +5,14 @@ import 'd3-transition'
 import paper from 'paper/dist/paper-core'
 
 import ModelBase from './ModelBase'
+import Intersection from '../models/Intersection'
 
 export default class Road extends ModelBase {
   constructor (options = {}) {
     super(options)
     this._selected = false
     this._path = new paper.Path()
+    this._intersections = []
     const throttledDragRoadPointFunc = _.throttle((d, ev) => {
       d.segment.point.x = ev.x
       d.segment.point.y = ev.y
@@ -24,7 +26,8 @@ export default class Road extends ModelBase {
 
   get defaults () {
     return {
-      type: 'Road'
+      type: 'Road',
+      maxSpeed: 50,
     }
   }
 
@@ -34,11 +37,19 @@ export default class Road extends ModelBase {
 
   addSegment (x, y) {
     this._path.add(new paper.Point(x, y))
+    if (this._intersections.length === 0) {
+      const intersection = new Intersection({})
+      this.addIntersection(intersection)
+    }
   }
 
   finalizeAdd () {
     //this._path.smooth('continuous')
     this._path.smooth({ type: 'catmull-rom', factor: 0.0})
+    if (this._intersections.length < 2) {
+      const intersection = new Intersection({})
+      this.addIntersection(intersection)
+    }
   }
 
   getNearestPoint (x, y) {
@@ -49,13 +60,51 @@ export default class Road extends ModelBase {
     return this._path.getLocationOf(new paper.Point(x, y))
   }
 
+  splitAt (location) {
+    return this._path.splitAt(location)
+  }
+
+  setPath (path) {
+    this._path = path
+  }
+
+  setSelected (bool) {
+    this._selected = bool
+  }
+
+  addIntersection (intersection) {
+    this._intersections.push(intersection)
+    if (!_.find(intersection.getRoads(), { id: this.id })) {
+      if (this._intersections.length === 1) {
+        intersection.addRoad(this, 'in')
+      } else {
+        intersection.addRoad(this, 'out')
+      }
+    }
+  }
+
+  setIntersectionAt (intersection, index) {
+    this._intersections[index] = intersection
+    if (!_.find(intersection.getRoads(), { id: this.id })) {
+      if (index === 0) {
+        intersection.addRoad(this, 'in')
+      } else {
+        intersection.addRoad(this, 'out')
+      }
+    }
+  }
+
+  getIntersections () {
+    return this._intersections
+  }
+
   render () {
     this._parent.trigger('render', this)
   }
 
   _render (svg, matrix) {
     this._transform(matrix)
-    this._renderRoad(svg)
+    this._renderRoad(svg, matrix)
     this._renderRoadPoints(svg)
     this._renderRoadHandles(svg)
   }
@@ -65,7 +114,7 @@ export default class Road extends ModelBase {
     this.path = transformedPath.transform(matrix)
   }
 
-  _renderRoad (svg) {
+  _renderRoad (svg, matrix) {
     const roadData = this.id ? [this] : []
     const roadsSvg = svg.selectAll(`.${this.id}`).data(roadData, d => d.id)
     const roadsSvgEnter = roadsSvg.enter().append('path')
@@ -73,13 +122,14 @@ export default class Road extends ModelBase {
     roadsSvgEnter.attr('d', d => d.path.pathData)
     const roadsSvgEdit = roadsSvgEnter.merge(roadsSvg).transition().ease(d3Ease.easeLinear).duration(100)
     roadsSvgEdit.attr('d', d => d.path.pathData)
+    roadsSvgEdit.style('stroke-width', 6 * matrix.scaling.x)
     roadsSvg.exit().remove()
   }
 
   _renderRoadPoints (svg) {
     const r = 5
     const roadPoints = []
-    if (this.selected) {
+    if (this._selected) {
       _.each(this.path.segments, (segment, i) => {
         roadPoints.push({ id: `point-${this.id}-${i}`, segment })
       })
@@ -101,7 +151,7 @@ export default class Road extends ModelBase {
   _renderRoadHandles (svg) {
     const w = 6
     const handlePoints = []
-    if (this.selected) {
+    if (this._selected) {
       _.each(this.path.segments, (segment, i) => {
         const handleIn = segment.getHandleIn()
         const handleOut = segment.getHandleOut()

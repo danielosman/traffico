@@ -100,21 +100,24 @@ export default class BeziersView extends Backbone.View {
   // Event handlers
 
   _onMouseMoved () {
-    const cx = d3Selection.event.x
-    const cy = d3Selection.event.y
+    const mouse = d3Selection.mouse(this.svg.node())
+    const cx = mouse[0]
+    const cy = mouse[1]
     const point = new paper.Point(cx, cy)
     const transformedPoint = this._matrix.inverseTransform(point)
     this.trigger('mouseMoved', { x: transformedPoint.x, y: transformedPoint.y, cx, cy, d: d3Selection.select(d3Selection.event.target).datum() })
   }
 
   _onMouseClicked () {
-    const point = new paper.Point(d3Selection.event.x, d3Selection.event.y)
+    const mouse = d3Selection.mouse(this.svg.node())
+    const cx = mouse[0]
+    const cy = mouse[1]
+    const point = new paper.Point(cx, cy)
     const transformedPoint = this._matrix.inverseTransform(point)
-    this.trigger('click', { x: transformedPoint.x, y: transformedPoint.y, d: d3Selection.select(d3Selection.event.target).datum() })
+    this.trigger('click', { x: transformedPoint.x, y: transformedPoint.y, cx, cy, d: d3Selection.select(d3Selection.event.target).datum() })
   }
 
   _onKeyDown () {
-    console.log('key: ', d3Selection.event)
     if (d3Selection.event.keyCode === 27) {
       this.trigger('cancelAllActions')
     } else if (d3Selection.event.key === '=') {
@@ -124,16 +127,16 @@ export default class BeziersView extends Backbone.View {
       this._scale *= 0.9
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'w') {
-      this._ty -= 10 * this._scale
-      this.applyMatrixTransform()
-    } else if (d3Selection.event.key === 's') {
       this._ty += 10 * this._scale
       this.applyMatrixTransform()
+    } else if (d3Selection.event.key === 's') {
+      this._ty -= 10 * this._scale
+      this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'd') {
-      this._tx += 10 * this._scale
+      this._tx -= 10 * this._scale
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'a') {
-      this._tx -= 10 * this._scale
+      this._tx += 10 * this._scale
       this.applyMatrixTransform()
     }
   }

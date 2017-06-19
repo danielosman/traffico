@@ -3,6 +3,7 @@ import _ from 'lodash'
 
 import ActionBase from './ActionBase'
 import Road from '../models/Road'
+import Intersection from '../models/Intersection'
 
 export default class RoadAdd extends ActionBase {
   constructor (options = {}) {
@@ -19,6 +20,14 @@ export default class RoadAdd extends ActionBase {
     return this._isActive
   }
 
+  getNewRoadNum () {
+    return (!this._roads || !this._roads.length) ? 1 : (_.maxBy(this._roads, 'num').num + 1)
+  }
+
+  getNewIntersectionNum () {
+    return (!this._intersections || !this._intersections.length) ? 1 : (_.maxBy(this._intersections, 'num').num + 1)
+  }
+
   activate (params) {
     if (!this.active) {
       console.log('RoadAdd activated')
@@ -27,8 +36,10 @@ export default class RoadAdd extends ActionBase {
       this.listenTo(this._parent, 'click', this._onClick)
       this._isActive = true
       this._hoveredRoad = null
-      const newNum = (!params.roads || !params.roads.length) ? 1 : (_.maxBy(params.roads, 'num').num + 1)
+      this._roads = params.roads
+      const newNum = this.getNewRoadNum()
       this.road = new Road({ num: newNum, id: `road-${newNum}`, parent: this._parent })
+      this._roads.push(this.road)
       console.log('Road: ', params, this.road)
     }
   }
@@ -52,8 +63,25 @@ export default class RoadAdd extends ActionBase {
     let point = new paper.Point(event.x, event.y)
     if (this._hoveredRoad) {
       point = this._roadMarker.getPoint()
+      const splitLocation = this._roadMarker.getLocation()
+      const path = this._hoveredRoad.splitAt(splitLocation)
+      const newNum = this.getNewRoadNum()
+      const newRoad = new Road({ num: newNum, id: `road-${newNum}`, parent: this._parent })
+      newRoad.setPath(path)
+      this._parent.trigger('addObject', newRoad)
+      this._roads.push(newRoad)
+      const intersection = new Intersection({ parent: this._parent })
+      newRoad.addIntersection(intersection)
+      newRoad.addIntersection(this._hoveredRoad.getIntersections()[1])
+      newRoad.render()
+      this._hoveredRoad.setIntersectionAt(intersection, 1)
+      this._hoveredRoad.render()
+      this.road.addIntersection(intersection)
     }
     this.road.addSegment(point.x, point.y)
+    if (this.road.getIntersections().length === 2) {
+      this.cancel()
+    }
     this.road.render()
   }
 

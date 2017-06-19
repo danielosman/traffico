@@ -13,16 +13,20 @@ export default class SelectAction extends ActionBase {
 
   unselectCurrentObject () {
     if (this.object) {
-      this.object.selected = false
+      this.object.setSelected(false)
       this.object.render()
     }
   }
 
   _onClick (event) {
-    if (event.d) {
+    if (event.d && event.d.cid) {
+      if (event.d.get('type') === 'RoadMarker') {
+        return
+      }
       this.object = event.d
-      this.object.selected = true
+      this.object.setSelected(true)
       this.object.render()
+      console.log('clicked: ', this.object)
     } else {
       this.unselectCurrentObject()
     }
