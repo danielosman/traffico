@@ -2,13 +2,15 @@ import * as d3Ease from 'd3-ease'
 import * as d3Drag from 'd3-drag'
 import * as d3Selection from 'd3-selection'
 import 'd3-transition'
+import paper from 'paper/dist/paper-core'
 
 import ModelBase from './ModelBase'
 
 export default class Road extends ModelBase {
   constructor (options = {}) {
     super(options)
-    this.selected = false
+    this._selected = false
+    this._path = new paper.Path()
     const throttledDragRoadPointFunc = _.throttle((d, ev) => {
       d.segment.point.x = ev.x
       d.segment.point.y = ev.y
@@ -30,14 +32,37 @@ export default class Road extends ModelBase {
     return this.get('num')
   }
 
+  addSegment (x, y) {
+    this._path.add(new paper.Point(x, y))
+  }
+
+  finalizeAdd () {
+    //this._path.smooth('continuous')
+    this._path.smooth({ type: 'catmull-rom', factor: 0.0})
+  }
+
+  getNearestPoint (x, y) {
+    return this._path.getNearestPoint(new paper.Point(x, y))
+  }
+
+  getLocationOf (x, y) {
+    return this._path.getLocationOf(new paper.Point(x, y))
+  }
+
   render () {
     this._parent.trigger('render', this)
   }
 
-  _render (svg) {
+  _render (svg, matrix) {
+    this._transform(matrix)
     this._renderRoad(svg)
     this._renderRoadPoints(svg)
     this._renderRoadHandles(svg)
+  }
+
+  _transform (matrix) {
+    const transformedPath = this._path.clone()
+    this.path = transformedPath.transform(matrix)
   }
 
   _renderRoad (svg) {

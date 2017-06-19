@@ -65,7 +65,7 @@ export default class BeziersView extends Backbone.View {
       this._actions = {}
       this._actions.select = new SelectAction({ parent: this })
       this._actions.roadDivide = new RoadDivide({ parent: this, roadMarker })
-      this._actions.roadAdd = new RoadAdd({ parent: this })
+      this._actions.roadAdd = new RoadAdd({ parent: this, roadMarker })
       //
       this.objects = []
     }
@@ -100,31 +100,70 @@ export default class BeziersView extends Backbone.View {
   // Event handlers
 
   _onMouseMoved () {
-    this.trigger('mouseMoved', { x: d3Selection.event.x, y: d3Selection.event.y })
+    const cx = d3Selection.event.x
+    const cy = d3Selection.event.y
+    const point = new paper.Point(cx, cy)
+    const transformedPoint = this._matrix.inverseTransform(point)
+    this.trigger('mouseMoved', { x: transformedPoint.x, y: transformedPoint.y, cx, cy, d: d3Selection.select(d3Selection.event.target).datum() })
   }
 
   _onMouseClicked () {
-    this.trigger('click', { x: d3Selection.event.x, y: d3Selection.event.y, d: d3Selection.select(d3Selection.event.target).datum() })
+    const point = new paper.Point(d3Selection.event.x, d3Selection.event.y)
+    const transformedPoint = this._matrix.inverseTransform(point)
+    this.trigger('click', { x: transformedPoint.x, y: transformedPoint.y, d: d3Selection.select(d3Selection.event.target).datum() })
   }
 
   _onKeyDown () {
+    console.log('key: ', d3Selection.event)
     if (d3Selection.event.keyCode === 27) {
       this.trigger('cancelAllActions')
+    } else if (d3Selection.event.key === '=') {
+      this._scale *= 1.1
+      this.applyMatrixTransform()
+    } else if (d3Selection.event.key === '-') {
+      this._scale *= 0.9
+      this.applyMatrixTransform()
+    } else if (d3Selection.event.key === 'w') {
+      this._ty -= 10 * this._scale
+      this.applyMatrixTransform()
+    } else if (d3Selection.event.key === 's') {
+      this._ty += 10 * this._scale
+      this.applyMatrixTransform()
+    } else if (d3Selection.event.key === 'd') {
+      this._tx += 10 * this._scale
+      this.applyMatrixTransform()
+    } else if (d3Selection.event.key === 'a') {
+      this._tx -= 10 * this._scale
+      this.applyMatrixTransform()
     }
   }
 
-  _prepareScales () {
-    const viewportWidth = 500
-    const currentX = 0
-    const currentY = 0
-    const aspectRatio = this.height / this.width
-    const viewport = [[currentX, currentX + viewportWidth], [currentY, currentY + viewportWidth * aspectRatio]]
-    this._xScale = d3Scale.scaleLinear().domain(viewport[0]).range([0, this.width])
-    this._yScale = d3Scale.scaleLinear().domain(viewport[1]).range([0, this.height])
+  _initScales () {
+    this._worldWidth = 2000
+    this._worldHeight = 2000
+    const scaleX = this.width / this._worldWidth
+    const scaleY = this.height / this._worldHeight
+    this._scale = Math.min(scaleX, scaleY)
+    this._tx = 0
+    this._ty = 0
+    this._matrix = new paper.Matrix()
+    this._matrix.translate(this._tx, this._ty)
+    this._matrix.scale(this._scale)
+  }
+
+  applyMatrixTransform () {
+    this._matrix = new paper.Matrix()
+    this._matrix.translate(this._tx, this._ty)
+    this._matrix.scale(this._scale)
+    this.renderAllObjects()
   }
 
   renderObject (obj) {
-    obj._render(this.svg)
+    obj._render(this.svg, this._matrix)
+  }
+
+  renderAllObjects () {
+    _.each(this.objects, obj => this.renderObject(obj))
   }
 
   addObject (obj) {
@@ -135,6 +174,6 @@ export default class BeziersView extends Backbone.View {
   render () {
     this._initSvg()
     this._initButtonPanel()
-    this._prepareScales()
+    this._initScales()
   }
 }
