@@ -8,4 +8,8 @@ export default class RoadMarker extends Backbone.Model {
     super(options)
     this._parent = parent
   }
+
+  render () {
+    this._parent.trigger('renderObject', this)
+  }
 }

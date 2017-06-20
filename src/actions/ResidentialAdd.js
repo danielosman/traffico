@@ -2,10 +2,8 @@ import paper from 'paper/dist/paper-core'
 import _ from 'lodash'
 
 import ActionBase from './ActionBase'
-import Road from '../models/Road'
-import Intersection from '../models/Intersection'
 
-export default class RoadAdd extends ActionBase {
+export default class ResidentialAdd extends ActionBase {
   constructor (options = {}) {
     const roadMarker = options.roadMarker
     _.unset(options, 'roadMarker')
@@ -19,35 +17,21 @@ export default class RoadAdd extends ActionBase {
     return this._isActive
   }
 
-  getNewRoadNum () {
-    return (!this._roads || !this._roads.length) ? 1 : (_.maxBy(this._roads, 'num').num + 1)
-  }
-
-  getNewIntersectionNum () {
-    return (!this._intersections || !this._intersections.length) ? 1 : (_.maxBy(this._intersections, 'num').num + 1)
-  }
-
   activate (params) {
     if (!this.active) {
-      console.log('RoadAdd activated')
+      console.log('ResidentialAdd activated')
       this._parent.trigger('cancelAllActions')
       this.listenTo(this._parent, 'cancelAllActions', this.cancel)
       this.listenTo(this._parent, 'mouseMoved', this._onMouseMoved)
       this.listenTo(this._parent, 'click', this._onClick)
       this._isActive = true
       this._hoveredRoad = null
-      this._roads = params.roads
-      const newNum = this.getNewRoadNum()
-      this.road = new Road({ num: newNum, id: `road-${newNum}`, parent: this._parent })
-      this._roads.push(this.road)
-      console.log('Road: ', params, this.road)
     }
   }
 
   cancel () {
     if (this.active) {
-      console.log('RoadAdd canceled')
-      this.road.finalizeAdd()
+      console.log('ResidentialAdd canceled')
       this.stopListening(this._parent, 'cancelAllActions')
       this.stopListening(this._parent, 'mouseMoved')
       this.stopListening(this._parent, 'click')

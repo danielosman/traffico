@@ -5,103 +5,23 @@ import 'd3-transition'
 import paper from 'paper/dist/paper-core'
 
 import ModelBase from './ModelBase'
-import Intersection from '../models/Intersection'
 
-export default class Road extends ModelBase {
+export default class ResidentialBuilding extends ModelBase {
   constructor (options = {}) {
     super(options)
     this._selected = false
-    this._path = new paper.Path()
-    this._intersections = []
-    const throttledDragRoadPointFunc = _.throttle((d, ev) => {
-      d.segment.point.x = ev.x
-      d.segment.point.y = ev.y
-      this.render()
-    }, 50).bind(this)
-    this.dragRoadPoint = d3Drag.drag().on('drag', d => {
-      const ev = { x: d3Selection.event.x, y: d3Selection.event.y }
-      throttledDragRoadPointFunc(d, ev)
-    })
   }
 
   get defaults () {
     return {
-      type: 'Road',
-      maxSpeed: 50,
-    }
-  }
-
-  get num () {
-    return this.get('num')
-  }
-
-  addSegment (x, y) {
-    this._path.add(new paper.Point(x, y))
-    if (this._intersections.length === 0) {
-      const intersection = new Intersection({})
-      this.addIntersection(intersection)
+      type: 'ResidentialBuilding',
+      a: 30,
+      b: 10,
+      h: 4
     }
   }
 
   finalizeAdd () {
-    if (this._path.segments.length < 3) {
-      this.remove()
-      return
-    }
-    // remove last segment - it is following the mouse
-    this._path.removeSegment(this._path.segments.length - 1)
-    //this._path.smooth('continuous')
-    this._path.smooth({ type: 'catmull-rom', factor: 0.0})
-    if (this._intersections.length < 2) {
-      const intersection = new Intersection({})
-      this.addIntersection(intersection)
-    }
-  }
-
-  getNearestPoint (x, y) {
-    return this._path.getNearestPoint(new paper.Point(x, y))
-  }
-
-  getLocationOf (x, y) {
-    return this._path.getLocationOf(new paper.Point(x, y))
-  }
-
-  splitAt (location) {
-    return this._path.splitAt(location)
-  }
-
-  setPath (path) {
-    this._path = path
-  }
-
-  setSelected (bool) {
-    this._selected = bool
-  }
-
-  addIntersection (intersection) {
-    this._intersections.push(intersection)
-    if (!_.find(intersection.getRoads(), { id: this.id })) {
-      if (this._intersections.length === 1) {
-        intersection.addRoad(this, 'in')
-      } else {
-        intersection.addRoad(this, 'out')
-      }
-    }
-  }
-
-  setIntersectionAt (intersection, index) {
-    this._intersections[index] = intersection
-    if (!_.find(intersection.getRoads(), { id: this.id })) {
-      if (index === 0) {
-        intersection.addRoad(this, 'in')
-      } else {
-        intersection.addRoad(this, 'out')
-      }
-    }
-  }
-
-  getIntersections () {
-    return this._intersections
   }
 
   remove () {

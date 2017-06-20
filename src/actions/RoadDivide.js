@@ -7,16 +7,16 @@ export default class RoadDivide extends ActionBase {
     super(options)
     this.isActive = false
     this.roadMarker = options.roadMarker
-    this.listenTo(this._parent, 'activate:RoadDivide', this.activate)
   }
 
   activate (params) {
     if (!this.isActive && params.road) {
       console.log('RoadDivide activated: ', params)
-      this.road = params.road
+      this._parent.trigger('cancelAllActions')
       this.listenTo(this._parent, 'cancelAllActions', this.cancel)
       this.listenTo(this._parent, 'mouseMoved', this._onMouseMoved)
       this.listenTo(this._parent, 'click', this._onClick)
+      this.road = params.road
       this.isActive = true
     }
   }

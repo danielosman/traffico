@@ -7,6 +7,7 @@ import Backbone from 'backbone'
 import SelectAction from '../actions/SelectAction'
 import RoadDivide from '../actions/RoadDivide'
 import RoadAdd from '../actions/RoadAdd'
+import ResidentialAdd from '../actions/ResidentialAdd'
 
 import Road from '../models/Road'
 import RoadMarker from '../models/RoadMarker'
@@ -17,14 +18,15 @@ import buttonPanelHTML from '../html/buttonPanel.html'
 export default class BeziersView extends Backbone.View {
   constructor (...args) {
     super(...args)
-    this.listenTo(this, 'render', this.renderObject)
+    this.listenTo(this, 'renderObject', this.renderObject)
     this.listenTo(this, 'addObject', this.addObject)
   }
 
   get events () {
     return {
       'click .road-add': '_onRoadAdd',
-      'click .road-divide': '_onRoadDivide'
+      'click .road-divide': '_onRoadDivide',
+      'click .residential-add': '_onResidentialAdd'
     }
   }
 
@@ -66,6 +68,7 @@ export default class BeziersView extends Backbone.View {
       this._actions.select = new SelectAction({ parent: this })
       this._actions.roadDivide = new RoadDivide({ parent: this, roadMarker })
       this._actions.roadAdd = new RoadAdd({ parent: this, roadMarker })
+      this._actions.residentialAdd = new ResidentialAdd({ parent: this, roadMarker })
       //
       this.objects = []
     }
@@ -86,15 +89,17 @@ export default class BeziersView extends Backbone.View {
   // Button handlers
 
   _onRoadAdd () {
-    this.trigger('cancelAllActions')
     const roads = _.filter(this.objects, obj => obj.get('type') === 'Road')
-    this.trigger('activate:RoadAdd', { roads })
+    this._actions.roadAdd.activate({ roads })
   }
 
   _onRoadDivide () {
     const road = this._actions.select.object
-    this.trigger('cancelAllActions')
-    this.trigger('activate:RoadDivide', { road })
+    this._actions.roadDivide.activate({ road })
+  }
+
+  _onResidentialAdd () {
+    this._actions.residentialAdd.activate()
   }
 
   // Event handlers
@@ -162,7 +167,7 @@ export default class BeziersView extends Backbone.View {
   }
 
   renderObject (obj) {
-    obj._render(this.svg, this._matrix)
+    obj.renderOnSVG(this.svg, this._matrix)
   }
 
   renderAllObjects () {

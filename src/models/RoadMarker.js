@@ -13,10 +13,6 @@ export default class RoadMarker extends ModelBase {
     }
   }
 
-  render () {
-    this._parent.trigger('render', this)
-  }
-
   remove () {
     this.point = null
     this._point = null
@@ -46,7 +42,7 @@ export default class RoadMarker extends ModelBase {
     }
   }
 
-  _render (svg, matrix) {
+  renderOnSVG (svg, matrix) {
     this._transform(matrix)
     const r = 6
     const pointData = this.point ? [this.point] : []
