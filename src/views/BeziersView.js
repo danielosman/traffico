@@ -1,5 +1,6 @@
 import * as d3Selection from 'd3-selection'
 import * as d3Scale from 'd3-scale'
+import * as d3Zoom from 'd3-zoom'
 import _ from 'lodash'
 import paper from 'paper/dist/paper-core'
 import Backbone from 'backbone'
@@ -58,8 +59,10 @@ export default class BeziersView extends Backbone.View {
       this.el.appendChild(svg)
       svg.classList.add('svg')
       paper.setup()
+      const zoom = d3Zoom.zoom().on('zoom', this._onZoom.bind(this))
       this.svg.on('mousemove', this._onMouseMoved.bind(this))
       this.svg.on('click', this._onMouseClicked.bind(this))
+      this.svg.call(zoom)
       d3Selection.select('body').on('keydown', this._onKeyDown.bind(this))
       // Init required objects
       const roadMarker = new RoadMarker({ parent: this })
@@ -132,18 +135,32 @@ export default class BeziersView extends Backbone.View {
       this._scale *= 0.9
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'w') {
-      this._ty += 10 * this._scale
+      //this._ty += 10 * this._scale
+      d3Zoom.zoomTransform(this.svg.node()).y += 10 * this._scale
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 's') {
-      this._ty -= 10 * this._scale
+      //this._ty -= 10 * this._scale
+      d3Zoom.zoomTransform(this.svg.node()).y -= 10 * this._scale
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'd') {
-      this._tx -= 10 * this._scale
+      //this._tx -= 10 * this._scale
+      //d3Zoom.zoomIdentity.x = this._tx
+      d3Zoom.zoomTransform(this.svg.node()).x -= 10 * this._scale
       this.applyMatrixTransform()
     } else if (d3Selection.event.key === 'a') {
-      this._tx += 10 * this._scale
+      //this._tx += 10 * this._scale
+      d3Zoom.zoomTransform(this.svg.node()).x += 10 * this._scale
       this.applyMatrixTransform()
     }
+  }
+
+  _onZoom () {
+    console.log('zoom: ', d3Zoom.zoomTransform(this.svg.node()))
+    const transform = d3Zoom.zoomTransform(this.svg.node())
+    this._scale = transform.k
+    this._tx = transform.x
+    this._ty = transform.y
+    this.applyMatrixTransform()
   }
 
   _initScales () {
@@ -157,12 +174,17 @@ export default class BeziersView extends Backbone.View {
     this._matrix = new paper.Matrix()
     this._matrix.translate(this._tx, this._ty)
     this._matrix.scale(this._scale)
+    d3Zoom.zoomIdentity.k = this._scale
+    console.log('d3Zoom.zoomIdentity: ', d3Zoom.zoomIdentity)
   }
 
   applyMatrixTransform () {
     this._matrix = new paper.Matrix()
-    this._matrix.translate(this._tx, this._ty)
-    this._matrix.scale(this._scale)
+    const transform = d3Zoom.zoomTransform(this.svg.node())
+    //this._matrix.translate(this._tx, this._ty)
+    //this._matrix.scale(this._scale)
+    this._matrix.translate(transform.x, transform.y)
+    this._matrix.scale(transform.k)
     this.renderAllObjects()
   }
 

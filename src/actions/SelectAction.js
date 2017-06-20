@@ -13,7 +13,7 @@ export default class SelectAction extends ActionBase {
 
   unselectCurrentObject () {
     if (this.object) {
-      this.object.setSelected(false)
+      this.object.selected = false
       this.object.render()
     }
   }
@@ -24,7 +24,7 @@ export default class SelectAction extends ActionBase {
         return
       }
       this.object = event.d
-      this.object.setSelected(true)
+      this.object.selected = true
       this.object.render()
       console.log('clicked: ', this.object)
     } else {

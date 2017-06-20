@@ -10,7 +10,6 @@ import Intersection from '../models/Intersection'
 export default class Road extends ModelBase {
   constructor (options = {}) {
     super(options)
-    this._selected = false
     this._path = new paper.Path()
     this._intersections = []
     const throttledDragRoadPointFunc = _.throttle((d, ev) => {
@@ -28,6 +27,7 @@ export default class Road extends ModelBase {
     return {
       type: 'Road',
       maxSpeed: 50,
+      w: 12
     }
   }
 
@@ -72,10 +72,6 @@ export default class Road extends ModelBase {
 
   setPath (path) {
     this._path = path
-  }
-
-  setSelected (bool) {
-    this._selected = bool
   }
 
   addIntersection (intersection) {
@@ -129,14 +125,14 @@ export default class Road extends ModelBase {
     roadsSvgEnter.attr('d', d => d.path.pathData)
     const roadsSvgEdit = roadsSvgEnter.merge(roadsSvg).transition().ease(d3Ease.easeLinear).duration(100)
     roadsSvgEdit.attr('d', d => d.path.pathData)
-    roadsSvgEdit.style('stroke-width', 6 * matrix.scaling.x)
+    roadsSvgEdit.style('stroke-width', this.get('w') * matrix.scaling.x)
     roadsSvg.exit().remove()
   }
 
   _renderRoadPoints (svg) {
     const r = 5
     const roadPoints = []
-    if (this._selected) {
+    if (this.selected) {
       _.each(this.path.segments, (segment, i) => {
         roadPoints.push({ id: `point-${this.id}-${i}`, segment })
       })
@@ -158,7 +154,7 @@ export default class Road extends ModelBase {
   _renderRoadHandles (svg) {
     const w = 6
     const handlePoints = []
-    if (this._selected) {
+    if (this.selected) {
       _.each(this.path.segments, (segment, i) => {
         const handleIn = segment.getHandleIn()
         const handleOut = segment.getHandleOut()

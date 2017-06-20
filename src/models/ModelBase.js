@@ -7,6 +7,15 @@ export default class RoadMarker extends Backbone.Model {
     _.unset(options, 'parent')
     super(options)
     this._parent = parent
+    this._selected = false
+  }
+
+  get selected () {
+    return this._selected
+  }
+
+  set selected (value) {
+    this._selected = value
   }
 
   render () {
