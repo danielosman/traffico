@@ -79,6 +79,9 @@ export default class RoadAdd extends ActionBase {
       this.road.addIntersection(intersection)
     }
     this.road.addSegment(point.x, point.y)
+    if (this.road._path.segments.length === 1) {
+      this.road.addSegment(point.x, point.y)
+    }
     if (this.road.getIntersections().length === 2) {
       this.cancel()
     }
@@ -104,6 +107,10 @@ export default class RoadAdd extends ActionBase {
         this._roadMarker.remove()
         this._hoveredRoad = null
       }
+    }
+    if (this.road._path.segments.length) {
+      this.road._path.lastSegment.point.set(event.x, event.y)
+      this.road.render()
     }
   }
 }

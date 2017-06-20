@@ -2,8 +2,8 @@ const webpack = require('webpack')
 const path = require('path')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const fileName = 'beziers'
-const libraryName = 'beziers'
+const fileName = 'traffico'
+const libraryName = 'traffico'
 
 
 const extractSass = new ExtractTextPlugin({
@@ -11,7 +11,7 @@ const extractSass = new ExtractTextPlugin({
   disable: process.env.NODE_ENV === "development"
 })
 const htmlWebpack = new HtmlWebpackPlugin({
-  title: 'RailRoads',
+  title: 'Traffico',
   filename: 'index.html'
 })
 /*
@@ -34,7 +34,7 @@ const externals = {
 
 const config = {
   entry: {
-    'beziers': path.join(__dirname, '/src/index.js')
+    'traffico': path.join(__dirname, '/src/index.js')
   },
   devtool: 'source-map',
   output: {

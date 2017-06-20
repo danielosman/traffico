@@ -44,6 +44,12 @@ export default class Road extends ModelBase {
   }
 
   finalizeAdd () {
+    if (this._path.segments.length < 3) {
+      this.remove()
+      return
+    }
+    // remove last segment - it is following the mouse
+    this._path.removeSegment(this._path.segments.length - 1)
     //this._path.smooth('continuous')
     this._path.smooth({ type: 'catmull-rom', factor: 0.0})
     if (this._intersections.length < 2) {
@@ -98,6 +104,11 @@ export default class Road extends ModelBase {
     return this._intersections
   }
 
+  remove () {
+    this._toBeRemoved = true
+    this.render()
+  }
+
   render () {
     this._parent.trigger('render', this)
   }
@@ -115,7 +126,7 @@ export default class Road extends ModelBase {
   }
 
   _renderRoad (svg, matrix) {
-    const roadData = this.id ? [this] : []
+    const roadData = this._toBeRemoved ? [] : [this]
     const roadsSvg = svg.selectAll(`.${this.id}`).data(roadData, d => d.id)
     const roadsSvgEnter = roadsSvg.enter().append('path')
     roadsSvgEnter.attr('class', d => `road ${d.id}`)
